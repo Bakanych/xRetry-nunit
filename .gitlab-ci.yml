@@ -1,0 +1,27 @@
+stages:
+  - build
+  - publish
+
+build:
+  image: joshkeegan/dotnet-mixed-build:2.4
+  stage: build
+  script:
+    - cd build
+    - make build unit-tests-run nuget-create
+  artifacts:
+    paths:
+      - artefacts
+      - deploy
+
+publish:
+  image: mcr.microsoft.com/dotnet/core/sdk:2.2.401-stretch
+  only:
+    - release
+  stage: publish
+  dependencies:
+    - build
+  variables:
+    GIT_STRATEGY: none
+  script:
+    - cd deploy
+    - /bin/bash deploy.sh ${NUGET_API_KEY}
