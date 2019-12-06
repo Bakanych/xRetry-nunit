@@ -4,12 +4,11 @@ using System.Collections.Generic;
 using System.Linq;
 using TechTalk.SpecFlow.Generator;
 using TechTalk.SpecFlow.Generator.CodeDom;
-using TechTalk.SpecFlow.Generator.UnitTestProvider;
 using xRetry.SpecFlow.Parsers;
 
 namespace xRetry.SpecFlow
 {
-    public class TestGeneratorProvider : NUnit3TestGeneratorProvider
+    public class TestGeneratorProvider : CustomNUnit3TestGeneratorProvider
     {
         private readonly IRetryTagParser _retryTagParser;
 
@@ -19,7 +18,7 @@ namespace xRetry.SpecFlow
             _retryTagParser = retryTagParser;
         }
 
-        public new void SetTestMethodCategories(TestClassGenerationContext generationContext, CodeMemberMethod testMethod, IEnumerable<string> scenarioCategories)
+        public override void SetTestMethodCategories(TestClassGenerationContext generationContext, CodeMemberMethod testMethod, IEnumerable<string> scenarioCategories)
         {
             // Prevent multiple enumerations
             scenarioCategories = scenarioCategories.ToList();
@@ -32,7 +31,7 @@ namespace xRetry.SpecFlow
                 RetryTag retryTag = _retryTagParser.Parse(strRetryTag);
 
                 // Add the Retry attribute
-                CodeDomHelper.AddAttribute(testMethod, $"NUnit.Framework.RetryAttribute({retryTag?.MaxRetries :: 5})");
+                CodeDomHelper.AddAttribute(testMethod, "NUnit.Framework.RetryAttribute", retryTag?.MaxRetries ?? 3);
 
             }
         }
