@@ -9,61 +9,31 @@ using xRetry.SpecFlow.Parsers;
 
 namespace xRetry.SpecFlow
 {
-    public class TestGeneratorProvider : XUnit2TestGeneratorProvider
+    public class TestGeneratorProvider : NUnit3TestGeneratorProvider
     {
-        private readonly IRetryTagParser retryTagParser;
+        private readonly IRetryTagParser _retryTagParser;
 
         public TestGeneratorProvider(CodeDomHelper codeDomHelper, IRetryTagParser retryTagParser) 
             : base(codeDomHelper)
         {
-            this.retryTagParser = retryTagParser;
+            _retryTagParser = retryTagParser;
         }
 
-        public override void SetTestMethodCategories(TestClassGenerationContext generationContext,
-            CodeMemberMethod testMethod, IEnumerable<string> scenarioCategories)
+        public new void SetTestMethodCategories(TestClassGenerationContext generationContext, CodeMemberMethod testMethod, IEnumerable<string> scenarioCategories)
         {
-            // Optimisation: Prevent multiple enumerations
-            scenarioCategories = scenarioCategories as string[] ?? scenarioCategories.ToArray();
+            // Prevent multiple enumerations
+            scenarioCategories = scenarioCategories.ToList();
 
             base.SetTestMethodCategories(generationContext, testMethod, scenarioCategories);
 
             string strRetryTag = getRetryTag(scenarioCategories);
             if (strRetryTag != null)
             {
-                RetryTag retryTag = retryTagParser.Parse(strRetryTag);
-
-                // Remove the Fact attribute
-                CodeAttributeDeclaration factAttribute = testMethod.CustomAttributes
-                    .OfType<CodeAttributeDeclaration>().FirstOrDefault(a => a.Name == "Xunit.FactAttribute");
-                if (factAttribute != null)
-                {
-                    testMethod.CustomAttributes.Remove(factAttribute);
-                }
+                RetryTag retryTag = _retryTagParser.Parse(strRetryTag);
 
                 // Add the Retry attribute
-                CodeAttributeDeclaration retryAttribute = CodeDomHelper.AddAttribute(testMethod,
-                    "xRetry.RetryFact");
+                CodeDomHelper.AddAttribute(testMethod, $"NUnit.Framework.RetryAttribute({retryTag?.MaxRetries :: 5})");
 
-                if (retryTag.MaxRetries != null)
-                {
-                    retryAttribute.Arguments.Add(
-                        new CodeAttributeArgument(new CodePrimitiveExpression(retryTag.MaxRetries)));
-
-                    if(retryTag.DelayBetweenRetriesMs != null)
-                    {
-                        retryAttribute.Arguments.Add(
-                            new CodeAttributeArgument(new CodePrimitiveExpression(retryTag.DelayBetweenRetriesMs)));
-                    }
-                }
-
-                // Copy arguments from the fact attribute (if there was one)
-                if (factAttribute != null)
-                {
-                    for (int i = 0; i < factAttribute.Arguments.Count; i++)
-                    {
-                        retryAttribute.Arguments.Add(factAttribute.Arguments[i]);
-                    }
-                }
             }
         }
 

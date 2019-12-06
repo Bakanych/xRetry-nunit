@@ -2,7 +2,7 @@
 <package>
   <metadata>
     <id>xRetry.SpecFlow</id>
-    <version>$version$</version>
+    <version>1.0.3</version>
     <authors>Josh Keegan</authors>
     <owners>Josh Keegan</owners>
     <projectUrl>https://github.com/JoshKeegan/xRetry</projectUrl>
@@ -14,7 +14,6 @@
 
     <dependencies>
       <dependency id="SpecFlow" version="3.0.220" />
-      <dependency id="xRetry" version="[$version$]" />
     </dependencies>
   </metadata>
 
