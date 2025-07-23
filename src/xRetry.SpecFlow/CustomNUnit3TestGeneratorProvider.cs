@@ -42,7 +42,13 @@ namespace xRetry.SpecFlow
 
         public override void SetTestClassParallelize(TestClassGenerationContext generationContext)
         {
-            CodeDomHelper.AddAttribute(generationContext.TestClass, PARALLELIZABLE_ATTR, new CodeAttributeArgument(new CodePrimitiveExpression(generationContext.TestClass.Name)));
+            CodeDomHelper.AddAttribute(
+                generationContext.TestClass,
+                PARALLELIZABLE_ATTR,
+                new CodeAttributeArgument(
+                    new CodeFieldReferenceExpression(
+                        new CodeTypeReferenceExpression("NUnit.Framework.ParallelScope"),
+                        "Fixtures")));
         }
     }
 }
